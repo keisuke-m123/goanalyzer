@@ -127,6 +127,9 @@ func (r *Relations) parseDirectory(directoryPath string) error {
 	}
 	for i := range pkgs {
 		p := newPackage(pkgs[i])
+		if p.Summary().Path() == "." {
+			continue
+		}
 		r.packages.add(p)
 		r.registerStructs(p)
 		r.registerInterfaces(p)
@@ -178,9 +181,6 @@ func (r *Relations) registerDefinedTypes(pkg *Package) {
 func (r *Relations) GeneratePackageGraph() *PackageGraph {
 	pg := newPackageGraph()
 	for _, pkg := range r.Packages().AsSlice() {
-		if pkg.Summary().Path() == "." {
-			continue
-		}
 		if _, ok := pg.graph[pkg.Summary().Path()]; !ok {
 			pg.graph[pkg.Summary().Path()] = make([]*PackageSummary, 0)
 		}
