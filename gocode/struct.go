@@ -98,6 +98,10 @@ func (s *Struct) Name() StructName {
 	return s.structName
 }
 
+func (s *Struct) Type() *Type {
+	return s.typ
+}
+
 func (s *Struct) PackageStructName() PackageStructName {
 	return NewPackageStructName(s.pkgSummary.Name(), s.Name())
 }

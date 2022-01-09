@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/keisuke-m123/goanalyzer/gocode"
-	"github.com/spf13/afero"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/analysistest"
 )
@@ -12,7 +11,7 @@ import (
 func TestLoadRelations(t *testing.T) {
 	tests := []struct {
 		name            string
-		directories     []string
+		relations       *gocode.Relations
 		numPackages     int
 		numStructs      int
 		numInterfaces   int
@@ -21,7 +20,7 @@ func TestLoadRelations(t *testing.T) {
 	}{
 		{
 			name:            "testingsupport-recursive",
-			directories:     []string{"./testdata/"},
+			relations:       testingSupportPackages,
 			numPackages:     1,
 			numStructs:      3,
 			numInterfaces:   2,
@@ -32,15 +31,7 @@ func TestLoadRelations(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			r, err := gocode.LoadRelations(&gocode.LoadOptions{
-				FileSystem:  afero.NewOsFs(),
-				Directories: test.directories,
-				Recursive:   true,
-			})
-			if err != nil {
-				t.Fatalf("failed to load relations: %s", err)
-			}
-
+			r := test.relations
 			if r.Packages().NumPackages() != test.numPackages {
 				t.Errorf("failed to load packages: %d", r.Packages().NumPackages())
 			}

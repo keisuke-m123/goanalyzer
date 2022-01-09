@@ -3,6 +3,7 @@ package gocode
 import (
 	"fmt"
 	"go/types"
+	"reflect"
 	"strings"
 )
 
@@ -108,6 +109,17 @@ func (t *Type) ContainsBuiltinInFundamentalTypes() bool {
 
 func (t *Type) Builtin() bool {
 	return t.typeName.builtin()
+}
+
+func (t *Type) EqualReflectionType(a interface{}) bool {
+	rt := reflect.TypeOf(a)
+	if rt == nil {
+		return false
+	}
+	if rt.Elem().PkgPath() != t.pkgSummary.Path().String() {
+		return false
+	}
+	return rt.Elem().Name() == t.typeName.String()
 }
 
 func (t *Type) resetFullTypeName(
