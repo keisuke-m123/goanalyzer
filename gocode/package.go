@@ -3,6 +3,7 @@ package gocode
 import (
 	"go/types"
 
+	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -40,6 +41,22 @@ type (
 		// detail はパッケージ内の詳細情報。
 		detail *PackageDetail
 	}
+
+	packageIn interface {
+		PkgPath() string
+		PkgName() string
+		Import() []*types.Package
+		Defs() []types.Object
+		Scope() *types.Scope
+	}
+
+	packageInPackagesPackage struct {
+		pkg *packages.Package
+	}
+
+	packageInAnalysisPass struct {
+		pass *analysis.Pass
+	}
 )
 
 func (pn PackageName) String() string {
@@ -50,10 +67,10 @@ func (pp PackagePath) String() string {
 	return string(pp)
 }
 
-func newPackageSummaryFromPackages(pkg *packages.Package) *PackageSummary {
+func newPackageSummary(pkg packageIn) *PackageSummary {
 	return &PackageSummary{
-		name: PackageName(pkg.Name),
-		path: PackagePath(pkg.PkgPath),
+		name: PackageName(pkg.PkgName()),
+		path: PackagePath(pkg.PkgPath()),
 	}
 }
 
@@ -76,7 +93,7 @@ func (p *PackageSummary) Equal(other *PackageSummary) bool {
 	return p.Path() == other.Path()
 }
 
-func newPackageDetail(pkg *packages.Package) *PackageDetail {
+func newPackageDetail(pkg packageIn) *PackageDetail {
 	return &PackageDetail{
 		imports:      newImportList(pkg),
 		structs:      newStructList(pkg),
@@ -106,11 +123,19 @@ func (pd *PackageDetail) DefinedTypes() []*DefinedType {
 	return pd.definedTypes.asSlice()
 }
 
-func newPackage(pkg *packages.Package) *Package {
+func newPackage(pkg packageIn) *Package {
 	return &Package{
-		summary: newPackageSummaryFromPackages(pkg),
+		summary: newPackageSummary(pkg),
 		detail:  newPackageDetail(pkg),
 	}
+}
+
+func newPackageFromPackages(pkg *packages.Package) *Package {
+	return newPackage(newPackageInPackages(pkg))
+}
+
+func newPackageFromAnalysis(pass *analysis.Pass) *Package {
+	return newPackage(newPackageInAnalysis(pass))
 }
 
 func (p *Package) Summary() *PackageSummary {
@@ -119,4 +144,68 @@ func (p *Package) Summary() *PackageSummary {
 
 func (p *Package) Detail() *PackageDetail {
 	return p.detail
+}
+
+func newPackageInPackages(pkg *packages.Package) packageIn {
+	return &packageInPackagesPackage{
+		pkg: pkg,
+	}
+}
+
+func (p *packageInPackagesPackage) PkgPath() string {
+	return p.pkg.PkgPath
+}
+
+func (p *packageInPackagesPackage) PkgName() string {
+	return p.pkg.Name
+}
+
+func (p *packageInPackagesPackage) Import() []*types.Package {
+	var imports []*types.Package
+	for _, pkg := range p.pkg.Imports {
+		imports = append(imports, pkg.Types)
+	}
+	return imports
+}
+
+func (p *packageInPackagesPackage) Defs() []types.Object {
+	var defs []types.Object
+	for _, d := range p.pkg.TypesInfo.Defs {
+		defs = append(defs, d)
+	}
+	return defs
+}
+
+func (p *packageInPackagesPackage) Scope() *types.Scope {
+	return p.pkg.Types.Scope()
+}
+
+func newPackageInAnalysis(pass *analysis.Pass) packageIn {
+	return &packageInAnalysisPass{
+		pass: pass,
+	}
+}
+
+func (p *packageInAnalysisPass) PkgPath() string {
+	return p.pass.Pkg.Path()
+}
+
+func (p *packageInAnalysisPass) PkgName() string {
+	return p.pass.Pkg.Name()
+}
+
+func (p *packageInAnalysisPass) Import() []*types.Package {
+	return p.pass.Pkg.Imports()
+}
+
+func (p *packageInAnalysisPass) Defs() []types.Object {
+	var defs []types.Object
+	for _, d := range p.pass.TypesInfo.Defs {
+		defs = append(defs, d)
+	}
+	return defs
+}
+
+func (p *packageInAnalysisPass) Scope() *types.Scope {
+	return p.pass.Pkg.Scope()
 }

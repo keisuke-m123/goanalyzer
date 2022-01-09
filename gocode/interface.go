@@ -3,8 +3,6 @@ package gocode
 import (
 	"go/types"
 	"strings"
-
-	"golang.org/x/tools/go/packages"
 )
 
 type (
@@ -41,9 +39,9 @@ func (pin PackageInterfaceName) String() string {
 	return string(pin)
 }
 
-func newInterfaceList(pkg *packages.Package) *InterfaceList {
+func newInterfaceList(pkg packageIn) *InterfaceList {
 	var interfaces []*Interface
-	scope := pkg.Types.Scope()
+	scope := pkg.Scope()
 	for _, name := range scope.Names() {
 		obj := scope.Lookup(name)
 		if i, ok := newInterfaceIfInterfaceType(obj); ok {

@@ -2,8 +2,6 @@ package gocode
 
 import (
 	"go/types"
-
-	"golang.org/x/tools/go/packages"
 )
 
 type (
@@ -152,9 +150,9 @@ func (fl *FunctionList) asSlice() []*Function {
 	return slice
 }
 
-func newMethodsFromObject(pkg *packages.Package, obj types.Object) *FunctionList {
+func newMethodsFromObject(pkg packageIn, obj types.Object) *FunctionList {
 	var methods []*Function
-	namedObj := pkg.Types.Scope().Lookup(obj.Name())
+	namedObj := pkg.Scope().Lookup(obj.Name())
 	if named, ok := namedObj.Type().(*types.Named); ok && named != nil {
 		for i := 0; i < named.NumMethods(); i++ {
 			funcObj := named.Method(i)

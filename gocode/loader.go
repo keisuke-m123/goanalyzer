@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/spf13/afero"
+	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -19,10 +19,6 @@ type (
 		interfaces   *PackageInterfaceMap
 		typeAliases  *PackageTypeAliasMap
 		definedTypes *PackageDefinedTypeMap
-	}
-
-	PackageGraph struct {
-		graph map[PackagePath][]*PackageSummary
 	}
 
 	// LoadOptions はgoコード解析時のオプション。
@@ -50,6 +46,13 @@ func LoadRelations(options *LoadOptions) (*Relations, error) {
 		return r, err
 	}
 	return r, nil
+}
+
+func LoadRelationsFromAnalysis(pass *analysis.Pass) *Relations {
+	r := newRelations()
+	p := newPackageFromAnalysis(pass)
+	r.addPackage(p)
+	return r
 }
 
 func (r *Relations) Packages() *PackageMap {
@@ -126,18 +129,22 @@ func (r *Relations) parseDirectory(directoryPath string) error {
 		return fmt.Errorf("load packages failed: %w", err)
 	}
 	for i := range pkgs {
-		p := newPackage(pkgs[i])
-		if p.Summary().Path() == "." {
-			continue
-		}
-		r.packages.add(p)
-		r.registerStructs(p)
-		r.registerInterfaces(p)
-		r.registerTypeAliases(p)
-		r.registerDefinedTypes(p)
+		p := newPackageFromPackages(pkgs[i])
+		r.addPackage(p)
 	}
 
 	return nil
+}
+
+func (r *Relations) addPackage(p *Package) {
+	if p.Summary().Path() == "." {
+		return
+	}
+	r.packages.add(p)
+	r.registerStructs(p)
+	r.registerInterfaces(p)
+	r.registerTypeAliases(p)
+	r.registerDefinedTypes(p)
 }
 
 func (r *Relations) registerRelations() {
@@ -178,41 +185,10 @@ func (r *Relations) registerDefinedTypes(pkg *Package) {
 	}
 }
 
-func (r *Relations) GeneratePackageGraph() *PackageGraph {
-	pg := newPackageGraph()
-	for _, pkg := range r.Packages().AsSlice() {
-		if _, ok := pg.graph[pkg.Summary().Path()]; !ok {
-			pg.graph[pkg.Summary().Path()] = make([]*PackageSummary, 0)
-		}
-		for _, im := range pkg.Detail().Imports() {
-			if r.Packages().Contains(im.PackageSummary().Path()) {
-				pg.graph[pkg.Summary().Path()] = append(pg.graph[pkg.Summary().Path()], im.PackageSummary())
-			}
-		}
-	}
-	return pg
+func (r *Relations) PackageGraph() *PackageGraph {
+	return newPackageGraph(r, false)
 }
 
-func newPackageGraph() *PackageGraph {
-	return &PackageGraph{
-		graph: make(map[PackagePath][]*PackageSummary),
-	}
-}
-func (pg *PackageGraph) SortedPackagePaths() []PackagePath {
-	var paths []PackagePath
-	for path := range pg.graph {
-		paths = append(paths, path)
-	}
-	sort.Slice(paths, func(i, j int) bool {
-		return strings.Compare(paths[i].String(), paths[j].String()) < 0
-	})
-	return paths
-}
-
-func (pg *PackageGraph) SortedImportPackagePaths(pkgPath PackagePath) []*PackageSummary {
-	summaries := append([]*PackageSummary{}, pg.graph[pkgPath]...)
-	sort.Slice(summaries, func(i, j int) bool {
-		return strings.Compare(summaries[i].Path().String(), summaries[j].Path().String()) < 0
-	})
-	return summaries
+func (r *Relations) PackageGraphWithExternalPackages() *PackageGraph {
+	return newPackageGraph(r, true)
 }

@@ -3,8 +3,6 @@ package gocode
 import (
 	"go/types"
 	"strings"
-
-	"golang.org/x/tools/go/packages"
 )
 
 type (
@@ -73,9 +71,9 @@ func (a *TypeAlias) Type() *Type {
 	return a.typ
 }
 
-func newAliasList(pkg *packages.Package) *TypeAliasList {
+func newAliasList(pkg packageIn) *TypeAliasList {
 	var aliases []*TypeAlias
-	scope := pkg.Types.Scope()
+	scope := pkg.Scope()
 	for _, name := range scope.Names() {
 		obj := scope.Lookup(name)
 		if a, ok := newTypeAliasIfObjectTypeAlias(obj); ok {

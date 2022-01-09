@@ -2,8 +2,6 @@ package gocode
 
 import (
 	"go/types"
-
-	"golang.org/x/tools/go/packages"
 )
 
 type (
@@ -32,7 +30,7 @@ func (dtn DefinedTypeName) String() string {
 	return string(dtn)
 }
 
-func newDefinedTypeIfObjectDefinedType(pkg *packages.Package, obj types.Object) (res *DefinedType, ok bool) {
+func newDefinedTypeIfObjectDefinedType(pkg packageIn, obj types.Object) (res *DefinedType, ok bool) {
 	tn, ok := obj.(*types.TypeName)
 	if !ok || tn.IsAlias() {
 		return &DefinedType{}, false
@@ -69,9 +67,9 @@ func (dt *DefinedType) Methods() []*Function {
 	return dt.methods.asSlice()
 }
 
-func newDefinedList(pkg *packages.Package) *DefinedTypeList {
+func newDefinedList(pkg packageIn) *DefinedTypeList {
 	var definedTypes []*DefinedType
-	scope := pkg.Types.Scope()
+	scope := pkg.Scope()
 	for _, name := range scope.Names() {
 		obj := scope.Lookup(name)
 		if a, ok := newDefinedTypeIfObjectDefinedType(pkg, obj); ok {

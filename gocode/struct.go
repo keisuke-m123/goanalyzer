@@ -3,8 +3,6 @@ package gocode
 import (
 	"go/types"
 	"strings"
-
-	"golang.org/x/tools/go/packages"
 )
 
 type (
@@ -51,9 +49,9 @@ func NewPackageStructName(pkgName PackageName, structName StructName) PackageStr
 	return PackageStructName(strings.Join([]string{pkgName.String(), structName.String()}, "."))
 }
 
-func newStructList(pkg *packages.Package) *StructList {
+func newStructList(pkg packageIn) *StructList {
 	var structs []*Struct
-	scope := pkg.Types.Scope()
+	scope := pkg.Scope()
 	for _, name := range scope.Names() {
 		obj := scope.Lookup(name)
 		if s, ok := newStructIfStructType(pkg, obj); ok {
@@ -71,7 +69,7 @@ func (s *StructList) asSlice() []*Struct {
 	return slice
 }
 
-func newStructIfStructType(pkg *packages.Package, obj types.Object) (res *Struct, ok bool) {
+func newStructIfStructType(pkg packageIn, obj types.Object) (res *Struct, ok bool) {
 	structType, ok := obj.Type().Underlying().(*types.Struct)
 	if !ok {
 		return &Struct{}, false

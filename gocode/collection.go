@@ -10,6 +10,10 @@ func newPackageMap() *PackageMap {
 	}
 }
 
+func (p *PackageMap) NumPackages() int {
+	return len(p.m)
+}
+
 func (p *PackageMap) AsSlice() []*Package {
 	var packages []*Package
 	for _, pkg := range p.m {
@@ -264,6 +268,16 @@ func (p *PackageDefinedTypeMap) PackageDefinedTypes(pkgName PackageName) []*Defi
 	}
 	for key := range definedTypeMap {
 		definedTypes = append(definedTypes, definedTypeMap[key])
+	}
+	return definedTypes
+}
+
+func (p *PackageDefinedTypeMap) DefinedTypeAll() []*DefinedType {
+	var definedTypes []*DefinedType
+	for pkgName := range p.m {
+		for definedType := range p.m[pkgName] {
+			definedTypes = append(definedTypes, p.m[pkgName][definedType])
+		}
 	}
 	return definedTypes
 }

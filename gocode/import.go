@@ -2,8 +2,6 @@ package gocode
 
 import (
 	"go/types"
-
-	"golang.org/x/tools/go/packages"
 )
 
 type (
@@ -42,19 +40,19 @@ func (i Import) PackageSummary() *PackageSummary {
 	return i.pkgSummary
 }
 
-// packages.Package からImport情報を抽出して生成する。
-func newImportList(pkg *packages.Package) *ImportList {
+// Import 情報を抽出してリストを返す。
+func newImportList(pkg packageIn) *ImportList {
 	imports := make(map[PackageName]*Import)
 	// general imports
-	for _, importedPkg := range pkg.Imports {
-		pkgSummary := newPackageSummaryFromPackages(importedPkg)
+	for _, importedPkg := range pkg.Import() {
+		pkgSummary := newPackageSummaryFromGoTypes(importedPkg)
 		imports[pkgSummary.Name()] = &Import{
 			alias:      "",
 			pkgSummary: pkgSummary,
 		}
 	}
 	// alias Imports
-	for _, d := range pkg.TypesInfo.Defs {
+	for _, d := range pkg.Defs() {
 		pkgName, ok := d.(*types.PkgName)
 		if ok {
 			pkgSummary := newPackageSummaryFromGoTypes(pkgName.Imported())
