@@ -119,18 +119,7 @@ func (s *Struct) ImplementInterfaces() *PackageInterfaceMap {
 }
 
 func (s *Struct) Implements(i *Interface) bool {
-	if len(i.Methods()) == 0 {
-		return false
-	}
-
-	typ := s.goType
-	switch t := typ.(type) {
-	case *types.Pointer:
-	default:
-		// pointerにしておかないとtypes.Implementsで正しく判定されない
-		typ = types.NewPointer(t)
-	}
-	return types.Implements(typ, i.goInterface)
+	return implements(s.goType, i)
 }
 
 func (s *Struct) addInterfaceIfImplements(i *Interface) {

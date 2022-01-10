@@ -10,6 +10,7 @@ type (
 
 	// DefinedType はdefined typeを表す。
 	DefinedType struct {
+		goType types.Type
 		// name はtypeされた名前。
 		name DefinedTypeName
 		// pkgSummary は定義されているパッケージのサマリ情報。
@@ -44,6 +45,7 @@ func newDefinedTypeIfObjectDefinedType(pkg packageIn, obj types.Object) (res *De
 	pkgSummary := newPackageSummaryFromGoTypes(obj.Pkg())
 
 	return &DefinedType{
+		goType:     obj.Type(),
 		pkgSummary: pkgSummary,
 		name:       DefinedTypeName(obj.Name()),
 		typ:        newType(pkgSummary, obj.Type().Underlying()),
@@ -65,6 +67,10 @@ func (dt *DefinedType) Type() *Type {
 
 func (dt *DefinedType) Methods() []*Function {
 	return dt.methods.asSlice()
+}
+
+func (dt *DefinedType) Implements(i *Interface) bool {
+	return implements(dt.goType, i)
 }
 
 func newDefinedList(pkg packageIn) *DefinedTypeList {
