@@ -54,6 +54,10 @@ func newField(field *types.Var) *Field {
 	}
 }
 
+func (f *Field) Exported() bool {
+	return f.goVar.Exported()
+}
+
 func (f *Field) Embedded() bool {
 	return f.goVar.Embedded()
 }
