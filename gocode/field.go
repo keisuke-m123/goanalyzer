@@ -1,6 +1,7 @@
 package gocode
 
 import (
+	"go/token"
 	"go/types"
 )
 
@@ -10,6 +11,7 @@ type (
 
 	// Field はstructのフィールドを表す。
 	Field struct {
+		definedPos token.Pos
 		goVar      *types.Var
 		name       FieldName
 		pkgSummary *PackageSummary
@@ -47,11 +49,16 @@ func newField(field *types.Var) *Field {
 	pkgSummary := newPackageSummaryFromGoTypes(field.Pkg())
 
 	return &Field{
+		definedPos: field.Pos(),
 		goVar:      field,
 		pkgSummary: pkgSummary,
 		name:       FieldName(field.Name()),
 		typ:        newType(pkgSummary, field.Type()),
 	}
+}
+
+func (f *Field) DefinedPos() token.Pos {
+	return f.definedPos
 }
 
 func (f *Field) Exported() bool {
