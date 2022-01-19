@@ -1,6 +1,7 @@
 package gocode
 
 import (
+	"go/token"
 	"go/types"
 )
 
@@ -10,13 +11,16 @@ type (
 
 	// DefinedType はdefined typeを表す。
 	DefinedType struct {
-		goType types.Type
+		// definedPos はコード中で DefinedType が定義された位置。
+		definedPos token.Pos
+		// typ は DefinedType 自体の型情報。
+		typ *Type
+		// underlyingTyp はtypeされた型情報。
+		underlyingTyp *Type
 		// name はtypeされた名前。
 		name DefinedTypeName
 		// pkgSummary は定義されているパッケージのサマリ情報。
 		pkgSummary *PackageSummary
-		// typ はtypeされた型。
-		typ *Type
 		// methods は定義されたメソッドの一覧。
 		methods *FunctionList
 	}
@@ -45,12 +49,17 @@ func newDefinedTypeIfObjectDefinedType(pkg packageIn, obj types.Object) (res *De
 	pkgSummary := newPackageSummaryFromGoTypes(obj.Pkg())
 
 	return &DefinedType{
-		goType:     obj.Type(),
-		pkgSummary: pkgSummary,
-		name:       DefinedTypeName(obj.Name()),
-		typ:        newType(pkgSummary, obj.Type().Underlying()),
-		methods:    newMethodsFromObject(pkg, obj),
+		definedPos:    obj.Pos(),
+		typ:           newType(pkgSummary, obj.Type()),
+		underlyingTyp: newType(pkgSummary, obj.Type().Underlying()),
+		pkgSummary:    pkgSummary,
+		name:          DefinedTypeName(obj.Name()),
+		methods:       newMethodsFromObject(pkg, obj),
 	}, true
+}
+
+func (dt *DefinedType) DefinedPos() token.Pos {
+	return dt.definedPos
 }
 
 func (dt *DefinedType) Name() DefinedTypeName {
@@ -65,12 +74,16 @@ func (dt *DefinedType) Type() *Type {
 	return dt.typ
 }
 
+func (dt *DefinedType) UnderlyingType() *Type {
+	return dt.underlyingTyp
+}
+
 func (dt *DefinedType) Methods() []*Function {
 	return dt.methods.asSlice()
 }
 
 func (dt *DefinedType) Implements(i *Interface) bool {
-	return implements(dt.goType, i)
+	return implements(dt.Type().GoType(), i)
 }
 
 func newDefinedList(pkg packageIn) *DefinedTypeList {

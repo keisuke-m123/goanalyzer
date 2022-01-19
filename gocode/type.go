@@ -82,6 +82,10 @@ func newType(currentPkgSummary *PackageSummary, typ types.Type) *Type {
 	return t
 }
 
+func (t *Type) GoType() types.Type {
+	return t.goType
+}
+
 func (t *Type) PackageSummary() *PackageSummary {
 	return t.pkgSummary
 }
@@ -145,7 +149,7 @@ func (tc *typeConverter) typeName(typ types.Type) TypeName {
 	return TypeName(tc._typeName(typ))
 }
 
-// typ を表示可能な形式の文字列に変換可能して返す。
+// underlyingTyp を表示可能な形式の文字列に変換可能して返す。
 func (tc *typeConverter) _typeName(typ types.Type) string {
 	switch t := typ.(type) {
 	case *types.Basic:
@@ -247,7 +251,7 @@ func (tc *typeConverter) typeNameNamed(t *types.Named) string {
 	return t.Obj().Name()
 }
 
-// typ の基底となる型情報を解析して一覧で返す。
+// underlyingTyp の基底となる型情報を解析して一覧で返す。
 func (tc *typeConverter) fundamentalTypes(typ types.Type) []*Type {
 	switch t := typ.(type) {
 	case *types.Basic:

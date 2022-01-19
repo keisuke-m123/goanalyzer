@@ -1,6 +1,7 @@
 package gocode
 
 import (
+	"go/token"
 	"go/types"
 	"strings"
 )
@@ -14,10 +15,10 @@ type (
 
 	// Struct は、Goのstructを表す。
 	Struct struct {
-		goType     types.Type
+		definedPos token.Pos
+		typ        *Type
 		structName StructName
 		pkgSummary *PackageSummary
-		typ        *Type
 		methods    *FunctionList
 		fields     *FieldList
 		implements *PackageInterfaceMap
@@ -78,7 +79,7 @@ func newStructIfStructType(pkg packageIn, obj types.Object) (res *Struct, ok boo
 	pkgSummary := newPackageSummaryFromGoTypes(obj.Pkg())
 
 	s := &Struct{
-		goType:     obj.Type(),
+		definedPos: obj.Pos(),
 		pkgSummary: pkgSummary,
 		typ:        newType(pkgSummary, obj.Type()),
 		structName: StructName(obj.Name()),
@@ -88,6 +89,10 @@ func newStructIfStructType(pkg packageIn, obj types.Object) (res *Struct, ok boo
 	}
 
 	return s, true
+}
+
+func (s *Struct) DefinedPos() token.Pos {
+	return s.definedPos
 }
 
 func (s *Struct) PackageSummary() *PackageSummary {
@@ -119,7 +124,7 @@ func (s *Struct) ImplementInterfaces() *PackageInterfaceMap {
 }
 
 func (s *Struct) Implements(i *Interface) bool {
-	return implements(s.goType, i)
+	return implements(s.Type().GoType(), i)
 }
 
 func (s *Struct) addInterfaceIfImplements(i *Interface) {

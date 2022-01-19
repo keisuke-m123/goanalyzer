@@ -1,6 +1,7 @@
 package gocode
 
 import (
+	"go/token"
 	"go/types"
 	"strings"
 )
@@ -14,6 +15,7 @@ type (
 
 	// Interface はinterfaceを表す。
 	Interface struct {
+		definedPos  token.Pos
 		goInterface *types.Interface
 		name        InterfaceName
 		pkgSummary  *PackageSummary
@@ -68,12 +70,17 @@ func newInterfaceIfInterfaceType(obj types.Object) (res *Interface, ok bool) {
 	pkgSummary := newPackageSummaryFromGoTypes(obj.Pkg())
 
 	return &Interface{
+		definedPos:  obj.Pos(),
 		goInterface: interfaceType,
 		pkgSummary:  pkgSummary,
 		name:        InterfaceName(obj.Name()),
 		methods:     newFunctionListFromInterface(interfaceType),
 		embeds:      newEmbedListFromInterfaceType(pkgSummary, interfaceType),
 	}, true
+}
+
+func (i *Interface) DefinedPos() token.Pos {
+	return i.definedPos
 }
 
 func (i *Interface) PackageSummary() *PackageSummary {
