@@ -83,6 +83,10 @@ func (dt *DefinedType) Methods() []*Function {
 }
 
 func (dt *DefinedType) Implements(i *Interface) bool {
+	return implements(dt.Type().GoType(), i.goInterface)
+}
+
+func (dt *DefinedType) ImplementsGoTypes(i *types.Interface) bool {
 	return implements(dt.Type().GoType(), i)
 }
 

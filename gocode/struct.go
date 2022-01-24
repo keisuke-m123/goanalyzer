@@ -124,6 +124,10 @@ func (s *Struct) ImplementInterfaces() *PackageInterfaceMap {
 }
 
 func (s *Struct) Implements(i *Interface) bool {
+	return implements(s.Type().GoType(), i.goInterface)
+}
+
+func (s *Struct) ImplementsGoTypes(i *types.Interface) bool {
 	return implements(s.Type().GoType(), i)
 }
 

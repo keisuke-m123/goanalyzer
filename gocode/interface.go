@@ -103,16 +103,15 @@ func (i *Interface) Embeds() []*Embed {
 	return i.embeds.asSlice()
 }
 
-func implements(typ types.Type, i *Interface) bool {
-	if len(i.Methods()) == 0 {
+func implements(typ types.Type, i *types.Interface) bool {
+	if i.NumMethods() == 0 {
 		return false
 	}
-
 	switch t := typ.(type) {
 	case *types.Pointer:
 	default:
 		// pointerにしておかないとtypes.Implementsで正しく判定されない
 		typ = types.NewPointer(t)
 	}
-	return types.Implements(typ, i.goInterface)
+	return types.Implements(typ, i)
 }
