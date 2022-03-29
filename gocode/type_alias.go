@@ -73,9 +73,7 @@ func (a *TypeAlias) Type() *Type {
 
 func newAliasList(pkg packageIn) *TypeAliasList {
 	var aliases []*TypeAlias
-	scope := pkg.Scope()
-	for _, name := range scope.Names() {
-		obj := scope.Lookup(name)
+	for _, obj := range pkg.Typed() {
 		if a, ok := newTypeAliasIfObjectTypeAlias(obj); ok {
 			aliases = append(aliases, a)
 		}

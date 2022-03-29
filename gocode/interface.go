@@ -43,9 +43,7 @@ func (pin PackageInterfaceName) String() string {
 
 func newInterfaceList(pkg packageIn) *InterfaceList {
 	var interfaces []*Interface
-	scope := pkg.Scope()
-	for _, name := range scope.Names() {
-		obj := scope.Lookup(name)
+	for _, obj := range pkg.Typed() {
 		if i, ok := newInterfaceIfInterfaceType(obj); ok {
 			interfaces = append(interfaces, i)
 		}

@@ -52,9 +52,7 @@ func NewPackageStructName(pkgName PackageName, structName StructName) PackageStr
 
 func newStructList(pkg packageIn) *StructList {
 	var structs []*Struct
-	scope := pkg.Scope()
-	for _, name := range scope.Names() {
-		obj := scope.Lookup(name)
+	for _, obj := range pkg.Typed() {
 		if s, ok := newStructIfStructType(pkg, obj); ok {
 			structs = append(structs, s)
 		}

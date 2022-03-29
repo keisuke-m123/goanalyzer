@@ -48,6 +48,7 @@ type (
 		Import() []*types.Package
 		Defs() []types.Object
 		Scope() *types.Scope
+		Typed() []types.Object
 	}
 
 	packageInPackagesPackage struct {
@@ -180,6 +181,10 @@ func (p *packageInPackagesPackage) Scope() *types.Scope {
 	return p.pkg.Types.Scope()
 }
 
+func (p *packageInPackagesPackage) Typed() []types.Object {
+	return lookupTyped(p.pkg.Types.Scope(), p.pkg.TypesInfo)
+}
+
 func newPackageInAnalysis(pass *analysis.Pass) packageIn {
 	return &packageInAnalysisPass{
 		pass: pass,
@@ -208,4 +213,31 @@ func (p *packageInAnalysisPass) Defs() []types.Object {
 
 func (p *packageInAnalysisPass) Scope() *types.Scope {
 	return p.pass.Pkg.Scope()
+}
+
+func (p *packageInAnalysisPass) Typed() []types.Object {
+	return lookupTyped(p.pass.Pkg.Scope(), p.pass.TypesInfo)
+}
+
+func lookupTyped(scope *types.Scope, info *types.Info) []types.Object {
+	// 変数と定数(var, const)を取得
+	varAndConstNames := make(map[string]struct{}, 0)
+	for _, d := range info.Defs {
+		// 変数(var)
+		if v, ok := d.(*types.Var); ok && !v.IsField() {
+			varAndConstNames[v.Name()] = struct{}{}
+		}
+		// 定数(const)
+		if v, ok := d.(*types.Const); ok {
+			varAndConstNames[v.Name()] = struct{}{}
+		}
+	}
+
+	var typed []types.Object
+	for _, name := range scope.Names() {
+		if _, ok := varAndConstNames[name]; !ok {
+			typed = append(typed, scope.Lookup(name))
+		}
+	}
+	return typed
 }

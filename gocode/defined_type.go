@@ -92,9 +92,7 @@ func (dt *DefinedType) ImplementsGoTypes(i *types.Interface) bool {
 
 func newDefinedList(pkg packageIn) *DefinedTypeList {
 	var definedTypes []*DefinedType
-	scope := pkg.Scope()
-	for _, name := range scope.Names() {
-		obj := scope.Lookup(name)
+	for _, obj := range pkg.Typed() {
 		if a, ok := newDefinedTypeIfObjectDefinedType(pkg, obj); ok {
 			definedTypes = append(definedTypes, a)
 		}

@@ -1,6 +1,17 @@
 package testdata
 
-import f "fmt"
+import (
+	"errors"
+	f "fmt"
+)
+
+var (
+	ErrNotFound = errors.New("not found")
+)
+
+const (
+	ConstString = "testingsupport"
+)
 
 type (
 	ExportedStruct struct {
